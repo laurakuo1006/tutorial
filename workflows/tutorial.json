@@ -1,6 +1,6 @@
 {
   "ActionList": {
-    "task_1": {
+    "task-1": {
       "Arguments": {
         "folder": "tutorial",
         "inputs": [],
@@ -10,13 +10,13 @@
         ]
       },
       "InvokeNext": [
-        "task_2"
+        "task-2"
       ],
       "FaaSServer": "GH",
       "Type": "Python",
       "FunctionName": "task_1"
     },
-    "task_2": {
+    "task-2": {
       "Arguments": {
         "folder": "tutorial",
         "inputs": [
@@ -50,14 +50,14 @@
     }
   },
   "ActionContainers": {
-    "task_1": "ghcr.io/faasr/github-actions-python:latest",
-    "task_2": "ghcr.io/faasr/github-actions-python:latest"
+    "task-1": "ghcr.io/faasr/github-actions-python:latest",
+    "task-2": "ghcr.io/faasr/github-actions-python:latest"
   },
-  "FunctionInvoke": "task_1",
+  "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
-    "task_1": "laurakuo1006/tutorial/functions",
-    "task_2": "laurakuo1006/tutorial/functions"
+    "task-1": "laurakuo1006/tutorial/functions",
+    "task-2": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
