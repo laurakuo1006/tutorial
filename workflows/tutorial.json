@@ -38,7 +38,7 @@
       "FaaSType": "GitHubActions",
       "UserName": "laurakuo1006",
       "UseSecretStore": true,
-      "ActionRepoName": "FaaSr-workflow",
+      "ActionRepoName": "tutorial",
       "Branch": "main"
     }
   },
