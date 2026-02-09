@@ -2,12 +2,9 @@
   "ActionList": {
     "task-1": {
       "Arguments": {
-        "folder": "tutorial",
-        "inputs": [],
-        "outputs": [
-          "dataset1.csv",
-          "dataset2.csv"
-        ]
+        "output_folder": "data",
+        "output_1"="dataset1.csv",
+        "output_2"="dataset2.csv"
       },
       "InvokeNext": [
         "task-2"
@@ -18,14 +15,10 @@
     },
     "task-2": {
       "Arguments": {
-        "folder": "tutorial",
-        "inputs": [
-          "dataset1.csv",
-          "dataset2.csv"
-        ],
-        "outputs": [
-          "summed_dataset.csv"
-        ]
+        "output_folder"="data", 
+        "input_1"="dataset1.csv", 
+        "input_2"="dataset2.csv", 
+        "output_1"="summed_dataset.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
