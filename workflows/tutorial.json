@@ -3,7 +3,7 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "random_integers_1.csv"
+        "output1": "dataset1.csv"
       },
       "InvokeNext": [
         "task-2"
@@ -15,7 +15,7 @@
     "task-2": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "random_integers_2.csv"
+        "output1": "dataset2.csv"
       },
       "InvokeNext": [
         "task-3"
@@ -27,27 +27,14 @@
     "task-3": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "random_integers_1.csv",
-        "input2": "random_integers_2.csv"
-      },
-      "InvokeNext": [
-        "task-4"
-      ],
-      "FaaSServer": "GH",
-      "Type": "Python",
-      "FunctionName": "task_3"
-    },
-    "task-4": {
-      "Arguments": {
-        "folder": "tutorial",
-        "input1": "random_integers_1.csv",
-        "input2": "random_integers_2.csv",
-        "output1": "summed_dataset.csv"
+        "input1": "dataset1.csv",
+        "input2": "dataset2.csv",
+        "output1": "summed_data.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
-      "FunctionName": "task_4"
+      "FunctionName": "task_3"
     }
   },
   "ComputeServers": {
@@ -69,16 +56,14 @@
   "ActionContainers": {
     "task-1": "ghcr.io/faasr/github-actions-python:latest",
     "task-2": "ghcr.io/faasr/github-actions-python:latest",
-    "task-3": "ghcr.io/faasr/github-actions-python:latest",
-    "task-4": "ghcr.io/faasr/github-actions-python:latest"
+    "task-3": "ghcr.io/faasr/github-actions-python:latest"
   },
   "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
     "task-1": "laurakuo1006/tutorial/functions",
     "task-2": "laurakuo1006/tutorial/functions",
-    "task-3": "laurakuo1006/tutorial/functions",
-    "task-4": "laurakuo1006/tutorial/functions"
+    "task-3": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
