@@ -6,7 +6,7 @@
         "output1": "dataset1.csv"
       },
       "InvokeNext": [
-        "task-2"
+        "task-3"
       ],
       "FaaSServer": "GH",
       "Type": "Python",
@@ -29,7 +29,7 @@
         "folder": "tutorial",
         "input1": "dataset1.csv",
         "input2": "dataset2.csv",
-        "output1": "summed_data.csv"
+        "output1": "combined_dataset.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
