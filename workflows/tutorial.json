@@ -56,9 +56,9 @@
     }
   },
   "ActionContainers": {
-    "task-1": "ghcr.io/faasr/github-actions-python:latest",
-    "task-2": "ghcr.io/faasr/github-actions-python:latest",
-    "task-3": "ghcr.io/faasr/github-actions-python:latest"
+    "task-1": "ghcr.io/faasr/github-actions-python:dev",
+    "task-2": "ghcr.io/faasr/github-actions-python:dev",
+    "task-3": "ghcr.io/faasr/github-actions-python:dev"
   },
   "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
