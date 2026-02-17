@@ -1,49 +1,46 @@
 import os
-import csv
+import json
 
-def task_2(folder='tutorial', input1='ghcnd_dataset.csv', output1='consistent_dataset.csv'):
-    faasr_get_file(remote_folder=folder, remote_file='ghcnd_dataset.csv', local_file='ghcnd_dataset.csv')
+def task_2(folder='tutorial', input1='dataset1.json', input2='dataset2.json', output1='datasets_validated.json', output2='validation_error.json'):
+    faasr_get_file(remote_folder=folder, remote_file='dataset1.json', local_file='dataset1.json')
+    faasr_get_file(remote_folder=folder, remote_file='dataset2.json', local_file='dataset2.json')
     os.makedirs(folder, exist_ok=True)
-    input_path = os.path.join(folder, input1)
-    output_path = os.path.join(folder, output1)
-    if not os.path.exists(input_path):
-        with open(output_path, 'w', newline='', encoding='utf-8') as f_out:
-            pass
+    path1 = os.path.join(folder, input1)
+    path2 = os.path.join(folder, input2)
+    out_valid = os.path.join(folder, output1)
+    out_error = os.path.join(folder, output2)
+
+    def is_number_list(lst):
+        if not isinstance(lst, list):
+            return False
+        for x in lst:
+            if not isinstance(x, (int, float)):
+                return False
+        return True
+    try:
+        with open(path1, 'r') as f1:
+            data1 = json.load(f1)
+        with open(path2, 'r') as f2:
+            data2 = json.load(f2)
+    except Exception as e:
+        error_report = {'error': f'Failed to read input files: {str(e)}'}
+        with open(out_error, 'w') as ef:
+            json.dump(error_report, ef, indent=2)
         return
-    with open(input_path, 'r', encoding='utf-8', newline='') as f_in:
-        sample = f_in.read(4096)
-        f_in.seek(0)
-        try:
-            sniffer = csv.Sniffer()
-            dialect = sniffer.sniff(sample)
-            has_header = sniffer.has_header(sample)
-        except csv.Error:
-            dialect = csv.excel
-            has_header = True
-        reader = csv.reader(f_in, dialect)
-        rows = list(reader)
-    if not rows:
-        with open(output_path, 'w', newline='', encoding='utf-8') as f_out:
-            pass
-        return
-    if has_header:
-        header = rows[0]
-        data_rows = rows[1:]
+    errors = []
+    if not is_number_list(data1):
+        errors.append(f'{input1} does not contain a JSON array of numerical values.')
+    if not is_number_list(data2):
+        errors.append(f'{input2} does not contain a JSON array of numerical values.')
+    if len(data1) != len(data2):
+        errors.append('The two datasets are not of equal length.')
+    if errors:
+        error_report = {'validation_errors': errors}
+        with open(out_error, 'w') as ef:
+            json.dump(error_report, ef, indent=2)
     else:
-        max_len = max((len(r) for r in rows))
-        header = [f'col_{i + 1}' for i in range(max_len)]
-        data_rows = rows
-    num_cols = len(header)
-    normalized_rows = []
-    for row in data_rows:
-        row = [field.strip() if isinstance(field, str) else field for field in row]
-        if len(row) < num_cols:
-            row = row + [''] * (num_cols - len(row))
-        elif len(row) > num_cols:
-            row = row[:num_cols]
-        normalized_rows.append(row)
-    with open(output_path, 'w', newline='', encoding='utf-8') as f_out:
-        writer = csv.writer(f_out, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(header)
-        writer.writerows(normalized_rows)
-    faasr_put_file(local_file='consistent_dataset.csv', remote_folder=folder, remote_file='consistent_dataset.csv')
+        combined = {'dataset1': data1, 'dataset2': data2}
+        with open(out_valid, 'w') as vf:
+            json.dump(combined, vf, indent=2)
+    faasr_put_file(local_file='datasets_validated.json', remote_folder=folder, remote_file='datasets_validated.json')
+    faasr_put_file(local_file='validation_error.json', remote_folder=folder, remote_file='validation_error.json')
