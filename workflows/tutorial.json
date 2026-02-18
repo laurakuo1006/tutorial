@@ -3,8 +3,7 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "dataset1.json",
-        "output2": "dataset2.json"
+        "output1": "datasets.json"
       },
       "InvokeNext": [
         "task-2"
@@ -16,67 +15,13 @@
     "task-2": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "dataset1.json",
-        "input2": "dataset2.json",
-        "output1": "datasets_validated.json",
-        "output2": "validation_error.json"
-      },
-      "InvokeNext": [
-        "task-3",
-        "task-5"
-      ],
-      "FaaSServer": "GH",
-      "Type": "Python",
-      "FunctionName": "task_2"
-    },
-    "task-3": {
-      "Arguments": {
-        "folder": "tutorial",
-        "input1": "datasets_validated.json",
-        "output1": "summed_data.json"
-      },
-      "InvokeNext": [
-        "task-4"
-      ],
-      "FaaSServer": "GH",
-      "Type": "Python",
-      "FunctionName": "task_3"
-    },
-    "task-4": {
-      "Arguments": {
-        "folder": "tutorial",
-        "input1": "summed_data.json",
-        "output1": "summed_data.csv"
-      },
-      "InvokeNext": [
-        "task-6"
-      ],
-      "FaaSServer": "GH",
-      "Type": "Python",
-      "FunctionName": "task_4"
-    },
-    "task-5": {
-      "Arguments": {
-        "folder": "tutorial",
-        "input1": "validation_error.json"
-      },
-      "InvokeNext": [
-        "task-6"
-      ],
-      "FaaSServer": "GH",
-      "Type": "Python",
-      "FunctionName": "task_5"
-    },
-    "task-6": {
-      "Arguments": {
-        "folder": "tutorial",
-        "input1": "summed_data.csv",
-        "input2": "validation_error.json"
+        "input1": "datasets.json",
+        "output1": "final_output.txt"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
-      "FunctionName": "task_6"
+      "FunctionName": "task_2"
     }
   },
   "ComputeServers": {
@@ -97,21 +42,13 @@
   },
   "ActionContainers": {
     "task-1": "http://ghcr.io/faasr/github-actions-python:dev",
-    "task-2": "http://ghcr.io/faasr/github-actions-python:dev",
-    "task-3": "http://ghcr.io/faasr/github-actions-python:dev",
-    "task-4": "http://ghcr.io/faasr/github-actions-python:dev",
-    "task-5": "http://ghcr.io/faasr/github-actions-python:dev",
-    "task-6": "http://ghcr.io/faasr/github-actions-python:dev"
+    "task-2": "http://ghcr.io/faasr/github-actions-python:dev"
   },
   "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
     "task-1": "laurakuo1006/tutorial/functions",
-    "task-2": "laurakuo1006/tutorial/functions",
-    "task-3": "laurakuo1006/tutorial/functions",
-    "task-4": "laurakuo1006/tutorial/functions",
-    "task-5": "laurakuo1006/tutorial/functions",
-    "task-6": "laurakuo1006/tutorial/functions"
+    "task-2": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
