@@ -49,8 +49,8 @@
   "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
-    "task-1": "laurakuo1006/tutorial/functions",
-    "task-2": "laurakuo1006/tutorial/functions"
+    "task_1": "laurakuo1006/tutorial/functions",
+    "task_2": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
