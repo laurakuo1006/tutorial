@@ -1,21 +1,39 @@
 import os
-import json
+import csv
 
-def task_2(folder='tutorial', input1='datasets.json', output1='final_output.txt'):
-    faasr_get_file(remote_folder=tutorial, remote_file='datasets.json', local_file='datasets.json')
+def task_2(folder='tutorial', input1='dataset1.csv', input2='dataset2.csv', output1='summed_result.csv'):
+    faasr_get_file(remote_folder=tutorial, remote_file='dataset1.csv', local_file='dataset1.csv')
+    faasr_get_file(remote_folder=tutorial, remote_file='dataset2.csv', local_file='dataset2.csv')
     os.makedirs(folder, exist_ok=True)
-    input_path = os.path.join(folder, input1)
-    output_path = os.path.join(folder, output1)
-    with open(input_path, 'r') as f:
-        data = json.load(f)
-    dataset1 = data['dataset1']
-    dataset2 = data['dataset2']
-    element_wise_sum = [a + b for a, b in zip(dataset1, dataset2)]
-    with open(output_path, 'w') as f:
-        f.write('Element-wise Sum Result:\n')
-        for value in element_wise_sum:
-            f.write(f'{value}\n')
-    print(f'Element-wise sum computed and written to {output_path}')
-    print(f'Result: {element_wise_sum}')
-    faasr_put_file(local_file='final_output.txt', remote_folder=tutorial, remote_file='final_output.txt')
-task_2('tutorial', 'datasets.json', 'final_output.txt')
+    path1 = os.path.join(folder, input1)
+    path2 = os.path.join(folder, input2)
+    out_path = os.path.join(folder, output1)
+    with open(path1, newline='') as f1:
+        reader1 = csv.DictReader(f1)
+        rows1 = list(reader1)
+    with open(path2, newline='') as f2:
+        reader2 = csv.DictReader(f2)
+        rows2 = list(reader2)
+    count1 = len(rows1)
+    count2 = len(rows2)
+    print(f'Row count for {input1}: {count1}')
+    print(f'Row count for {input2}: {count2}')
+    if count1 != 10:
+        raise ValueError(f'{input1} does not contain exactly 10 data rows (found {count1}).')
+    if count2 != 10:
+        raise ValueError(f'{input2} does not contain exactly 10 data rows (found {count2}).')
+    if count1 != count2:
+        raise ValueError(f'Row count mismatch: {input1} has {count1} rows, {input2} has {count2} rows.')
+    summed = []
+    for r1, r2 in zip(rows1, rows2):
+        val1 = float(r1['value'])
+        val2 = float(r2['value'])
+        summed.append(round(val1 + val2, 2))
+    with open(out_path, 'w', newline='') as fout:
+        writer = csv.writer(fout)
+        writer.writerow(['summed_result'])
+        for s in summed:
+            writer.writerow([s])
+    print(f'Summed result written to {out_path}')
+    faasr_put_file(local_file='summed_result.csv', remote_folder=tutorial, remote_file='summed_result.csv')
+task_2('tutorial', 'dataset1.csv', 'dataset2.csv', 'summed_result.csv')
