@@ -1,5 +1,9 @@
 import os
 import csv
+from FaaSr_py.client.py_client_stubs import (
+    faasr_put_file,
+    faasr_get_file,
+)
 
 def task_2(folder='tutorial', input1='dataset1.csv', input2='dataset2.csv', output1='summed_result.csv'):
     faasr_get_file(remote_folder=tutorial, remote_file='dataset1.csv', local_file='dataset1.csv')
