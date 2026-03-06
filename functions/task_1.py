@@ -22,6 +22,5 @@ def task_1(folder='tutorial', output1='dataset1.csv', output2='dataset2.csv'):
         for v in values2:
             f.write(f'{v}\n')
     print(f'Created {output1_path} and {output2_path}')
-    faasr_put_file(local_file='dataset1.csv', remote_folder=tutorial, remote_file='dataset1.csv')
-    faasr_put_file(local_file='dataset2.csv', remote_folder=tutorial, remote_file='dataset2.csv')
-task_1('tutorial', 'dataset1.csv', 'dataset2.csv')
+    faasr_put_file(local_file='dataset1.csv', remote_folder=folder, remote_file='dataset1.csv')
+    faasr_put_file(local_file='dataset2.csv', remote_folder=folder, remote_file='dataset2.csv')
