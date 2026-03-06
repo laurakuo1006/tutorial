@@ -3,58 +3,68 @@ import os
 import csv
 import random
 
-def task_2(folder='tutorial', input1='file1.csv', input2='file2.csv', output1='sums.csv'):
-    faasr_get_file(remote_folder=folder, remote_file='file1.csv', local_file='tutorial/file1.csv')
-    faasr_get_file(remote_folder=folder, remote_file='file2.csv', local_file='tutorial/file2.csv')
+def task_2(folder='tutorial', input1='source_a.csv', input2='source_b.csv', output1='summed_output.csv'):
+    faasr_get_file(remote_folder=folder, remote_file='source_a.csv', local_file='tutorial/source_a.csv')
+    faasr_get_file(remote_folder=folder, remote_file='source_b.csv', local_file='tutorial/source_b.csv')
     os.makedirs(folder, exist_ok=True)
-    file1_path = os.path.join(folder, input1)
-    file2_path = os.path.join(folder, input2)
-    output_path = os.path.join(folder, output1)
-    random.seed(42)
-    values1 = [random.randint(1, 100) for _ in range(10)]
-    values2 = [random.randint(1, 100) for _ in range(10)]
-    with open(file1_path, 'w', newline='\n', encoding='utf-8') as f:
+    path_a = os.path.join(folder, input1)
+    path_b = os.path.join(folder, input2)
+    path_out = os.path.join(folder, output1)
+    values_a = [random.randint(1, 100) for _ in range(10)]
+    with open(path_a, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['value'])
-        for v in values1:
+        for v in values_a:
             writer.writerow([v])
-    with open(file2_path, 'w', newline='\n', encoding='utf-8') as f:
+    values_b = [random.randint(1, 100) for _ in range(10)]
+    with open(path_b, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['value'])
-        for v in values2:
+        for v in values_b:
             writer.writerow([v])
-    with open(file1_path, 'r', newline='\n', encoding='utf-8') as f:
+    with open(path_a, 'r', newline='') as f:
         reader = csv.DictReader(f)
-        rows1 = list(reader)
-    if len(rows1) != 10:
-        raise ValueError(f'file1.csv must have exactly 10 data rows, found {len(rows1)}')
-    for i, row in enumerate(rows1):
-        try:
-            int(row['value'])
-        except (ValueError, KeyError):
-            raise ValueError(f"file1.csv row {i + 1} value '{row.get('value')}' is not a valid integer")
-        val = int(row['value'])
-        if not 1 <= val <= 100:
-            raise ValueError(f'file1.csv row {i + 1} value {val} is out of range [1, 100]')
-    with open(file2_path, 'r', newline='\n', encoding='utf-8') as f:
+        rows_a = list(reader)
+    if len(rows_a) != 10:
+        print(f'ERROR: source_a.csv contains {len(rows_a)} data rows, expected 10.')
+        return
+    with open(path_b, 'r', newline='') as f:
         reader = csv.DictReader(f)
-        rows2 = list(reader)
-    if len(rows2) != 10:
-        raise ValueError(f'file2.csv must have exactly 10 data rows, found {len(rows2)}')
-    if len(rows1) != len(rows2):
-        raise ValueError(f'Row count mismatch: file1.csv has {len(rows1)}, file2.csv has {len(rows2)}')
-    for i, row in enumerate(rows2):
+        rows_b = list(reader)
+    if len(rows_b) != 10:
+        print(f'ERROR: source_b.csv contains {len(rows_b)} data rows, expected 10.')
+        return
+    int_values_a = []
+    for i, row in enumerate(rows_a, start=1):
+        raw = row['value'].strip()
         try:
-            int(row['value'])
-        except (ValueError, KeyError):
-            raise ValueError(f"file2.csv row {i + 1} value '{row.get('value')}' is not a valid integer")
-        val = int(row['value'])
-        if not 1 <= val <= 100:
-            raise ValueError(f'file2.csv row {i + 1} value {val} is out of range [1, 100]')
-    sums = [int(rows1[i]['value']) + int(rows2[i]['value']) for i in range(10)]
-    with open(output_path, 'w', newline='\n', encoding='utf-8') as f:
-        f.write('sum\n')
-        for s in sums:
-            f.write(f'{s}\n')
-    print(f'Written {output_path} with sums: {sums}')
-    faasr_put_file(local_file='tutorial/sums.csv', remote_folder=folder, remote_file='sums.csv')
+            val = int(raw)
+        except ValueError:
+            print(f'ERROR: source_a.csv contains an invalid value at row {i}: {raw}')
+            return
+        if val < 1 or val > 100:
+            print(f'ERROR: source_a.csv contains an invalid value at row {i}: {raw}')
+            return
+        int_values_a.append(val)
+    int_values_b = []
+    for i, row in enumerate(rows_b, start=1):
+        raw = row['value'].strip()
+        try:
+            val = int(raw)
+        except ValueError:
+            print(f'ERROR: source_b.csv contains an invalid value at row {i}: {raw}')
+            return
+        if val < 1 or val > 100:
+            print(f'ERROR: source_b.csv contains an invalid value at row {i}: {raw}')
+            return
+        int_values_b.append(val)
+    print(f'source_a values: {int_values_a}')
+    print(f'source_b values: {int_values_b}')
+    summed = [a + b for a, b in zip(int_values_a, int_values_b)]
+    print(f'summed values: {summed}')
+    with open(path_out, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['sum'])
+        for s in summed:
+            writer.writerow([s])
+    faasr_put_file(local_file='tutorial/summed_output.csv', remote_folder=folder, remote_file='summed_output.csv')
