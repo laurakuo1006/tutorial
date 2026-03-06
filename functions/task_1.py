@@ -4,6 +4,7 @@ import csv
 import random
 
 def task_1(folder='tutorial', output1='integers_a.csv', output2='integers_b.csv'):
+    os.makedirs(folder, exist_ok=True)
     path_a = os.path.join(folder, output1)
     path_b = os.path.join(folder, output2)
     values_a = [random.randint(1, 100) for _ in range(15)]
@@ -18,6 +19,7 @@ def task_1(folder='tutorial', output1='integers_a.csv', output2='integers_b.csv'
         writer.writerow(['value'])
         for v in values_b:
             writer.writerow([v])
-    print(f'Generated {path_a} and {path_b} with 15 random integers each.')
-    faasr_put_file(local_file='integers_a.csv', remote_folder=folder, remote_file='integers_a.csv')
-    faasr_put_file(local_file='integers_b.csv', remote_folder=folder, remote_file='integers_b.csv')
+    print(f'Written {path_a} with 15 rows.')
+    print(f'Written {path_b} with 15 rows.')
+    faasr_put_file(local_file='tutorial/integers_a.csv', remote_folder=folder, remote_file='integers_a.csv')
+    faasr_put_file(local_file='tutorial/integers_b.csv', remote_folder=folder, remote_file='integers_b.csv')
