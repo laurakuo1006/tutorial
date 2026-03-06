@@ -1,26 +1,33 @@
 from FaaSr_py.client.py_client_stubs import faasr_put_file, faasr_get_file
 import os
 import random
+import csv
 
-def task_1(folder='tutorial', output1='file1.csv', output2='file2.csv'):
+def task_1(folder='tutorial', output1='source_a.csv', output2='source_b.csv'):
     os.makedirs(folder, exist_ok=True)
-    values1 = [random.randint(1, 100) for _ in range(10)]
-    values2 = [random.randint(1, 100) for _ in range(10)]
-    path1 = os.path.join(folder, output1)
-    with open(path1, mode='w', encoding='utf-8', newline='\n') as f:
-        f.write('value\n')
-        for v in values1:
-            f.write(f'{v}\n')
-    path2 = os.path.join(folder, output2)
-    with open(path2, mode='w', encoding='utf-8', newline='\n') as f:
-        f.write('value\n')
-        for v in values2:
-            f.write(f'{v}\n')
-    sums = [v1 + v2 for v1, v2 in zip(values1, values2)]
-    result_path = os.path.join(folder, 'result.csv')
-    with open(result_path, mode='w', encoding='utf-8', newline='\n') as f:
-        f.write('value\n')
-        for s in sums:
-            f.write(f'{s}\n')
-    faasr_put_file(local_file='tutorial/file1.csv', remote_folder=folder, remote_file='file1.csv')
-    faasr_put_file(local_file='tutorial/file2.csv', remote_folder=folder, remote_file='file2.csv')
+    seed_a = random.randint(1, 10 ** 9)
+    rng_a = random.Random(seed_a)
+    print(f'source_a.csv seed used: {seed_a}')
+    values_a = [rng_a.randint(1, 100) for _ in range(10)]
+    print(f'source_a values: {values_a}')
+    path_a = os.path.join(folder, output1)
+    with open(path_a, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['value'])
+        for v in values_a:
+            writer.writerow([v])
+    seed_b = seed_a
+    while seed_b == seed_a:
+        seed_b = random.randint(1, 10 ** 9)
+    rng_b = random.Random(seed_b)
+    print(f'source_b.csv seed used: {seed_b}')
+    values_b = [rng_b.randint(1, 100) for _ in range(10)]
+    print(f'source_b values: {values_b}')
+    path_b = os.path.join(folder, output2)
+    with open(path_b, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['value'])
+        for v in values_b:
+            writer.writerow([v])
+    faasr_put_file(local_file='tutorial/source_a.csv', remote_folder=folder, remote_file='source_a.csv')
+    faasr_put_file(local_file='tutorial/source_b.csv', remote_folder=folder, remote_file='source_b.csv')
