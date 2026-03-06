@@ -3,8 +3,8 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "integers_a.csv",
-        "output2": "integers_b.csv"
+        "output1": "file1.csv",
+        "output2": "file2.csv"
       },
       "InvokeNext": [
         "task-2"
@@ -16,9 +16,9 @@
     "task-2": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "integers_a.csv",
-        "input2": "integers_b.csv",
-        "output1": "summed_results.csv"
+        "input1": "file1.csv",
+        "input2": "file2.csv",
+        "output1": "sums.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
