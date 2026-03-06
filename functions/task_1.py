@@ -1,5 +1,9 @@
 import os
 import random
+from FaaSr_py.client.py_client_stubs import (
+    faasr_put_file,
+    faasr_get_file,
+)
 
 def task_1(folder='tutorial', output1='dataset1.csv', output2='dataset2.csv'):
     os.makedirs(folder, exist_ok=True)
