@@ -14,6 +14,7 @@ def task_1(folder='tutorial', output1='dataset1.csv', output2='dataset2.csv'):
         f.write('value\n')
         for v in values1:
             f.write(f'{v}\n')
+
     random.seed(99)
     values2 = [round(random.uniform(51.0, 100.0), 2) for _ in range(10)]
     output2_path = os.path.join(folder, output2)
@@ -21,6 +22,7 @@ def task_1(folder='tutorial', output1='dataset1.csv', output2='dataset2.csv'):
         f.write('value\n')
         for v in values2:
             f.write(f'{v}\n')
+
     print(f'Created {output1_path} and {output2_path}')
-    faasr_put_file(local_file='dataset1.csv', remote_folder=folder, remote_file='dataset1.csv')
-    faasr_put_file(local_file='dataset2.csv', remote_folder=folder, remote_file='dataset2.csv')
+    faasr_put_file(local_file=output1_path, remote_folder=folder, remote_file=output1)
+    faasr_put_file(local_file=output2_path, remote_folder=folder, remote_file=output2)
