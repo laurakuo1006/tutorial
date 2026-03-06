@@ -6,8 +6,8 @@ from FaaSr_py.client.py_client_stubs import (
 )
 
 def task_2(folder='tutorial', input1='dataset1.csv', input2='dataset2.csv', output1='summed_result.csv'):
-    faasr_get_file(remote_folder=tutorial, remote_file='dataset1.csv', local_file='dataset1.csv')
-    faasr_get_file(remote_folder=tutorial, remote_file='dataset2.csv', local_file='dataset2.csv')
+    faasr_get_file(remote_folder=folder, remote_file='dataset1.csv', local_file='dataset1.csv')
+    faasr_get_file(remote_folder=folder, remote_file='dataset2.csv', local_file='dataset2.csv')
     os.makedirs(folder, exist_ok=True)
     path1 = os.path.join(folder, input1)
     path2 = os.path.join(folder, input2)
@@ -39,5 +39,4 @@ def task_2(folder='tutorial', input1='dataset1.csv', input2='dataset2.csv', outp
         for s in summed:
             writer.writerow([s])
     print(f'Summed result written to {out_path}')
-    faasr_put_file(local_file='summed_result.csv', remote_folder=tutorial, remote_file='summed_result.csv')
-task_2('tutorial', 'dataset1.csv', 'dataset2.csv', 'summed_result.csv')
+    faasr_put_file(local_file='summed_result.csv', remote_folder=folder, remote_file='summed_result.csv')
