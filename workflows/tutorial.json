@@ -3,17 +3,43 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "dataset1.csv",
-        "output2": "dataset2.csv"
+        "output1": "config.json"
       },
       "InvokeNext": [
-        "task-2"
+        "task-2",
+        "task-3"
       ],
       "FaaSServer": "GH",
       "Type": "Python",
       "FunctionName": "task_1"
     },
     "task-2": {
+      "Arguments": {
+        "folder": "tutorial",
+        "input1": "config.json",
+        "output1": "dataset1.csv"
+      },
+      "InvokeNext": [
+        "task-4"
+      ],
+      "FaaSServer": "GH",
+      "Type": "Python",
+      "FunctionName": "task_2"
+    },
+    "task-3": {
+      "Arguments": {
+        "folder": "tutorial",
+        "input1": "config.json",
+        "output1": "dataset2.csv"
+      },
+      "InvokeNext": [
+        "task-4"
+      ],
+      "FaaSServer": "GH",
+      "Type": "Python",
+      "FunctionName": "task_3"
+    },
+    "task-4": {
       "Arguments": {
         "folder": "tutorial",
         "input1": "dataset1.csv",
@@ -23,7 +49,7 @@
       "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
-      "FunctionName": "task_2"
+      "FunctionName": "task_4"
     }
   },
   "ComputeServers": {
@@ -43,14 +69,18 @@
     }
   },
   "ActionContainers": {
-    "task-1": "ghcr.io/faasr/github-actions-python:latest",
-    "task-2": "ghcr.io/faasr/github-actions-python:latest"
+    "task-1": "http://ghcr.io/faasr/github-actions-python:dev",
+    "task-2": "http://ghcr.io/faasr/github-actions-python:dev",
+    "task-3": "http://ghcr.io/faasr/github-actions-python:dev",
+    "task-4": "http://ghcr.io/faasr/github-actions-python:dev"
   },
   "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
-    "task_1": "laurakuo1006/tutorial/functions",
-    "task_2": "laurakuo1006/tutorial/functions"
+    "1": "laurakuo1006/tutorial/functions",
+    "2": "laurakuo1006/tutorial/functions",
+    "3": "laurakuo1006/tutorial/functions",
+    "4": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
