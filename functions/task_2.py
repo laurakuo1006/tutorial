@@ -4,9 +4,10 @@ import csv
 import random
 
 def task_2(folder='tutorial', input1='integers_a.csv', input2='integers_b.csv', output1='summed_results.csv'):
+    os.makedirs(folder, exist_ok=True)
     faasr_get_file(remote_folder=folder, remote_file='integers_a.csv', local_file='tutorial/integers_a.csv')
     faasr_get_file(remote_folder=folder, remote_file='integers_b.csv', local_file='tutorial/integers_b.csv')
-    os.makedirs(folder, exist_ok=True)
+    
     path_a = os.path.join(folder, input1)
     path_b = os.path.join(folder, input2)
     path_out = os.path.join(folder, output1)
