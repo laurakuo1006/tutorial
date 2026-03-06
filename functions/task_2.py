@@ -1,35 +1,31 @@
 from FaaSr_py.client.py_client_stubs import faasr_put_file, faasr_get_file
 import os
-import csv
 import random
 
-def task_2(folder='tutorial', input1='integers_a.csv', input2='integers_b.csv', output1='summed_results.csv'):
+def task_2(folder='tutorial', input1='file1.csv', input2='file2.csv', output1='summed_output.csv'):
     os.makedirs(folder, exist_ok=True)
-    faasr_get_file(remote_folder=folder, remote_file='integers_a.csv', local_file='tutorial/integers_a.csv')
-    faasr_get_file(remote_folder=folder, remote_file='integers_b.csv', local_file='tutorial/integers_b.csv')
-    path_a = os.path.join(folder, input1)
-    path_b = os.path.join(folder, input2)
-    path_out = os.path.join(folder, output1)
-    if not os.path.exists(path_a):
-        with open(path_a, 'w', newline='') as f:
-            writer = csv.writer(f)
-            for _ in range(10):
-                writer.writerow([random.randint(1, 100)])
-    if not os.path.exists(path_b):
-        with open(path_b, 'w', newline='') as f:
-            writer = csv.writer(f)
-            for _ in range(10):
-                writer.writerow([random.randint(1, 100)])
-    with open(path_a, 'r', newline='') as f:
-        reader = csv.reader(f)
-        values_a = [int(row[0]) for row in reader]
-    with open(path_b, 'r', newline='') as f:
-        reader = csv.reader(f)
-        values_b = [int(row[0]) for row in reader]
-    sums = [a + b for a, b in zip(values_a, values_b)]
-    with open(path_out, 'w', newline='') as f:
-        writer = csv.writer(f)
+    input1_path = os.path.join(folder, input1)
+    input2_path = os.path.join(folder, input2)
+    output1_path = os.path.join(folder, output1)
+    if not os.path.exists(input1_path):
+        values1 = [random.randint(1, 100) for _ in range(10)]
+        with open(input1_path, 'w') as f:
+            for v in values1:
+                f.write(f'{v}\n')
+    if not os.path.exists(input2_path):
+        values2 = [random.randint(1, 100) for _ in range(10)]
+        with open(input2_path, 'w') as f:
+            for v in values2:
+                f.write(f'{v}\n')
+    faasr_get_file(remote_folder=folder, remote_file='file1.csv', local_file='tutorial/file1.csv')
+    faasr_get_file(remote_folder=folder, remote_file='file2.csv', local_file='tutorial/file2.csv')
+    with open(input1_path, 'r') as f:
+        col1 = [int(line.strip()) for line in f if line.strip()]
+    with open(input2_path, 'r') as f:
+        col2 = [int(line.strip()) for line in f if line.strip()]
+    sums = [a + b for a, b in zip(col1, col2)]
+    with open(output1_path, 'w') as f:
         for s in sums:
-            writer.writerow([int(s)])
-    print(f'Written {len(sums)} summed values to {path_out}')
-    faasr_put_file(local_file='tutorial/summed_results.csv', remote_folder=folder, remote_file='summed_results.csv')
+            f.write(f'{s}\n')
+    faasr_put_file(local_file='tutorial/summed_output.csv', remote_folder=folder, remote_file='summed_output.csv')
+    print(f'Written {len(sums)} rows to {output1_path}')
