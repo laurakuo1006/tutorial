@@ -1,69 +1,56 @@
 import os
 import csv
-import random
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
 def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="summed_results.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
-        local_a = os.path.join("/tmp", input1)
-        local_b = os.path.join("/tmp", input2)
-        local_out = os.path.join("/tmp", output1)
+        local_a = "integers_a.csv"
+        local_b = "integers_b.csv"
+        local_out = "summed_results.csv"
 
-        # Download integers_a.csv from S3
-        faasr_log(f"Downloading {input1} from S3 folder {folder}")
-        try:
-            faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
-            faasr_log(f"Successfully downloaded {input1}")
-        except Exception as e:
-            faasr_log(f"Could not download {input1}: {e}. Generating random data instead.")
-            with open(local_a, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                for _ in range(10):
-                    writer.writerow([random.randint(1, 100)])
+        faasr_log("Downloading integers_a.csv from S3")
+        faasr_get_file(local_file=local_a, remote_file=input1, local_folder="/tmp", remote_folder=folder)
 
-        # Download integers_b.csv from S3
-        faasr_log(f"Downloading {input2} from S3 folder {folder}")
-        try:
-            faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
-            faasr_log(f"Successfully downloaded {input2}")
-        except Exception as e:
-            faasr_log(f"Could not download {input2}: {e}. Generating random data instead.")
-            with open(local_b, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                for _ in range(10):
-                    writer.writerow([random.randint(1, 100)])
+        faasr_log("Downloading integers_b.csv from S3")
+        faasr_get_file(local_file=local_b, remote_file=input2, local_folder="/tmp", remote_folder=folder)
 
-        # Read integers from both files
-        faasr_log("Reading values from both input files")
-        with open(local_a, 'r', newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            values_a = [int(row[0]) for row in reader]
+        path_a = os.path.join("/tmp", local_a)
+        path_b = os.path.join("/tmp", local_b)
+        path_out = os.path.join("/tmp", local_out)
 
-        with open(local_b, 'r', newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            values_b = [int(row[0]) for row in reader]
+        faasr_log("Reading integers_a.csv")
+        with open(path_a, newline='') as f:
+            reader = csv.DictReader(f)
+            rows_a = [int(row['value']) for row in reader]
 
-        faasr_log(f"Read {len(values_a)} values from {input1} and {len(values_b)} values from {input2}")
+        faasr_log("Reading integers_b.csv")
+        with open(path_b, newline='') as f:
+            reader = csv.DictReader(f)
+            rows_b = [int(row['value']) for row in reader]
 
-        # Perform element-wise addition
-        sums = [a + b for a, b in zip(values_a, values_b)]
-        faasr_log(f"Computed {len(sums)} element-wise sums")
+        if len(rows_a) != len(rows_b):
+            faasr_log(f"Row count mismatch: integers_a.csv has {len(rows_a)} rows, integers_b.csv has {len(rows_b)} rows.")
+            raise ValueError(f"Row count mismatch: integers_a.csv has {len(rows_a)} rows, integers_b.csv has {len(rows_b)} rows.")
 
-        # Write results to output CSV
-        with open(local_out, 'w', newline='', encoding='utf-8') as f:
+        faasr_log("Computing element-wise sums")
+        sums = [a + b for a, b in zip(rows_a, rows_b)]
+
+        faasr_log("Writing summed_results.csv to /tmp")
+        with open(path_out, 'w', newline='') as f:
             writer = csv.writer(f)
+            writer.writerow(['sum'])
             for s in sums:
                 writer.writerow([s])
 
-        faasr_log(f"Written {len(sums)} rows to local file {local_out}")
+        faasr_log(f"Written {len(sums)} summed rows to {path_out}")
 
-        # Upload output to S3
-        faasr_log(f"Uploading {output1} to S3 folder {folder}")
-        faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Successfully uploaded {output1} to S3 folder {folder}")
+        faasr_log("Uploading summed_results.csv to S3")
+        faasr_put_file(local_file=local_out, remote_file=output1, local_folder="/tmp", remote_folder=folder)
+
+        faasr_log("task_2 completed successfully")
 
     except Exception as e:
-        faasr_log(f"Error in task_2: {e}")
+        faasr_log(f"Error in task_2: {str(e)}")
         raise
