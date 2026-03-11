@@ -1,37 +1,46 @@
 import os
+import csv
 import random
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_1(folder="tutorial", output1="input1.csv", output2="input2.csv"):
+def task_1(folder="tutorial", output1="integers_a.csv", output2="integers_b.csv"):
     try:
-        faasr_log("Starting task_1: generating random CSV files")
+        faasr_log("Starting task_1: generating random integer CSV files")
 
-        os.makedirs("/tmp", exist_ok=True)
+        local_folder = "/tmp"
+        os.makedirs(local_folder, exist_ok=True)
 
-        random.seed(42)
+        local_path_a = os.path.join(local_folder, output1)
+        local_path_b = os.path.join(local_folder, output2)
 
-        values1 = [random.randint(1, 100) for _ in range(10)]
-        values2 = [random.randint(1, 100) for _ in range(10)]
+        integers_a = [random.randint(1, 100) for _ in range(10)]
+        integers_b = [random.randint(1, 100) for _ in range(10)]
 
-        output1_local = os.path.join("/tmp", output1)
-        with open(output1_local, 'w') as f:
-            for v in values1:
-                f.write(f"{v}\n")
+        faasr_log(f"Generated integers_a: {integers_a}")
+        faasr_log(f"Generated integers_b: {integers_b}")
 
-        faasr_log(f"Generated local file {output1_local} with values: {values1}")
+        with open(local_path_a, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for val in integers_a:
+                writer.writerow([val])
 
-        output2_local = os.path.join("/tmp", output2)
-        with open(output2_local, 'w') as f:
-            for v in values2:
-                f.write(f"{v}\n")
+        faasr_log(f"Written local file: {local_path_a}")
 
-        faasr_log(f"Generated local file {output2_local} with values: {values2}")
+        with open(local_path_b, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for val in integers_b:
+                writer.writerow([val])
 
-        faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
+        faasr_log(f"Written local file: {local_path_b}")
+
+        faasr_put_file(local_file=output1, remote_file=output1, local_folder=local_folder, remote_folder=folder)
         faasr_log(f"Uploaded {output1} to S3 folder {folder}")
 
-        faasr_put_file(local_file=output2, remote_file=output2, local_folder="/tmp", remote_folder=folder)
+        faasr_put_file(local_file=output2, remote_file=output2, local_folder=local_folder, remote_folder=folder)
         faasr_log(f"Uploaded {output2} to S3 folder {folder}")
+
+        sums = [a + b for a, b in zip(integers_a, integers_b)]
+        faasr_log(f"Element-wise sums: {sums}")
 
         faasr_log("task_1 completed successfully")
 
