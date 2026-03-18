@@ -2,172 +2,140 @@ import os
 import csv
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_3(folder="tutorial", input1="summed_results.csv", input2="integers_a.csv", input3="integers_b.csv", output1="validation_report.txt"):
+def task_3(folder="tutorial", input1="summed_output.csv", input2="integers_a.csv", input3="integers_b.csv", output1="element_wise_addition_validation_report.txt"):
     try:
-        os.makedirs("/tmp", exist_ok=True)
-
-        local_summed = "summed_results.csv"
-        local_a = "integers_a.csv"
-        local_b = "integers_b.csv"
-        local_report = "validation_report.txt"
+        local_tmp = "/tmp"
+        os.makedirs(local_tmp, exist_ok=True)
 
         faasr_log(f"Downloading input files from S3 folder '{folder}'")
 
         try:
-            faasr_get_file(local_file=local_summed, remote_file=input1, local_folder="/tmp", remote_folder=folder)
+            faasr_get_file(local_file=input1, remote_file=input1, local_folder=local_tmp, remote_folder=folder)
             faasr_log(f"Downloaded '{input1}' successfully.")
         except Exception as e:
             faasr_log(f"ERROR: Could not download '{input1}': {e}")
 
         try:
-            faasr_get_file(local_file=local_a, remote_file=input2, local_folder="/tmp", remote_folder=folder)
+            faasr_get_file(local_file=input2, remote_file=input2, local_folder=local_tmp, remote_folder=folder)
             faasr_log(f"Downloaded '{input2}' successfully.")
         except Exception as e:
             faasr_log(f"ERROR: Could not download '{input2}': {e}")
 
         try:
-            faasr_get_file(local_file=local_b, remote_file=input3, local_folder="/tmp", remote_folder=folder)
+            faasr_get_file(local_file=input3, remote_file=input3, local_folder=local_tmp, remote_folder=folder)
             faasr_log(f"Downloaded '{input3}' successfully.")
         except Exception as e:
             faasr_log(f"ERROR: Could not download '{input3}': {e}")
 
-        summed_path = os.path.join("/tmp", local_summed)
-        integers_a_path = os.path.join("/tmp", local_a)
-        integers_b_path = os.path.join("/tmp", local_b)
-        report_path = os.path.join("/tmp", local_report)
+        summed_path = os.path.join(local_tmp, input1)
+        integers_a_path = os.path.join(local_tmp, input2)
+        integers_b_path = os.path.join(local_tmp, input3)
+        report_path = os.path.join(local_tmp, output1)
 
-        report_lines = []
-        all_passed = True
+        discrepancies = []
+        results = []
 
-        def read_csv_single_column(filepath):
-            values = []
-            with open(filepath, newline='') as f:
+        def read_single_column_csv(filepath):
+            rows = []
+            with open(filepath, 'r', newline='') as f:
                 reader = csv.reader(f)
                 for row in reader:
-                    if row:
-                        values.append(row[0].strip())
-            return values
+                    rows.append(row)
+            return rows
 
-        # Read all three files
-        try:
-            summed_raw = read_csv_single_column(summed_path)
-            report_lines.append(f"Successfully read '{input1}'.")
-            faasr_log(f"Successfully read '{input1}'.")
-        except Exception as e:
-            report_lines.append(f"ERROR: Could not read '{input1}': {e}")
-            faasr_log(f"ERROR: Could not read '{input1}': {e}")
-            all_passed = False
-            summed_raw = []
+        faasr_log("Reading input CSV files")
 
         try:
-            a_raw = read_csv_single_column(integers_a_path)
-            report_lines.append(f"Successfully read '{input2}'.")
-            faasr_log(f"Successfully read '{input2}'.")
+            summed_rows = read_single_column_csv(summed_path)
         except Exception as e:
-            report_lines.append(f"ERROR: Could not read '{input2}': {e}")
-            faasr_log(f"ERROR: Could not read '{input2}': {e}")
-            all_passed = False
-            a_raw = []
+            discrepancies.append(f"ERROR: Could not read '{input1}': {e}")
+            summed_rows = []
 
         try:
-            b_raw = read_csv_single_column(integers_b_path)
-            report_lines.append(f"Successfully read '{input3}'.")
-            faasr_log(f"Successfully read '{input3}'.")
+            a_rows = read_single_column_csv(integers_a_path)
         except Exception as e:
-            report_lines.append(f"ERROR: Could not read '{input3}': {e}")
-            faasr_log(f"ERROR: Could not read '{input3}': {e}")
-            all_passed = False
-            b_raw = []
+            discrepancies.append(f"ERROR: Could not read '{input2}': {e}")
+            a_rows = []
 
-        # Check (1): summed_results.csv contains exactly 10 rows with no header row
-        report_lines.append("\n--- Check 1: Row count and no header row ---")
-        faasr_log("Running Check 1: Row count and no header row")
-        if len(summed_raw) == 10:
-            report_lines.append("PASS: 'summed_results.csv' contains exactly 10 rows.")
+        try:
+            b_rows = read_single_column_csv(integers_b_path)
+        except Exception as e:
+            discrepancies.append(f"ERROR: Could not read '{input3}': {e}")
+            b_rows = []
+
+        faasr_log("Checking row count of summed_output.csv")
+        num_summed_rows = len(summed_rows)
+        if num_summed_rows != 15:
+            discrepancies.append(f"Row count check FAILED: '{input1}' has {num_summed_rows} rows, expected 15.")
         else:
-            report_lines.append(f"FAIL: 'summed_results.csv' contains {len(summed_raw)} rows (expected 10).")
-            all_passed = False
+            results.append(f"Row count check PASSED: '{input1}' has exactly 15 rows.")
 
-        # Check for header (non-integer first row)
-        if summed_raw:
+        faasr_log("Validating all values in summed_output.csv are integers")
+        all_integers = True
+        for i, row in enumerate(summed_rows):
+            if len(row) == 0:
+                discrepancies.append(f"Row {i+1} in '{input1}' is empty.")
+                all_integers = False
+                continue
             try:
-                int(summed_raw[0])
-                report_lines.append("PASS: No header row detected in 'summed_results.csv' (first row is an integer).")
+                int(row[0].strip())
             except ValueError:
-                report_lines.append(f"FAIL: Header row detected in 'summed_results.csv' (first row value: '{summed_raw[0]}').")
-                all_passed = False
+                discrepancies.append(f"Row {i+1} in '{input1}' contains non-integer value: '{row[0]}'.")
+                all_integers = False
 
-        # Parse integer values
-        def parse_ints(raw_list, name):
-            parsed = []
-            errors = []
-            for i, val in enumerate(raw_list):
+        if all_integers and num_summed_rows > 0:
+            results.append(f"Integer validation PASSED: All values in '{input1}' are valid whole integers with no header.")
+
+        faasr_log("Performing element-wise addition validation")
+        if a_rows and b_rows and summed_rows:
+            min_len = min(len(a_rows), len(b_rows), len(summed_rows))
+            addition_errors = []
+            for i in range(min_len):
                 try:
-                    parsed.append(int(val))
-                except ValueError:
-                    errors.append(f"Row {i}: '{val}' is not an integer.")
-                    parsed.append(None)
-            return parsed, errors
+                    a_val = int(a_rows[i][0].strip())
+                    b_val = int(b_rows[i][0].strip())
+                    expected = a_val + b_val
+                    actual = int(summed_rows[i][0].strip())
+                    if actual != expected:
+                        addition_errors.append(
+                            f"Row {i+1}: {input2}={a_val}, {input3}={b_val}, expected sum={expected}, got={actual}."
+                        )
+                except (ValueError, IndexError) as e:
+                    addition_errors.append(f"Row {i+1}: Error during validation - {e}")
 
-        summed_vals, summed_errors = parse_ints(summed_raw, input1)
-        a_vals, a_errors = parse_ints(a_raw, input2)
-        b_vals, b_errors = parse_ints(b_raw, input3)
+            if addition_errors:
+                discrepancies.extend(addition_errors)
+            else:
+                results.append(f"Element-wise addition validation PASSED: All {min_len} rows match expected sums.")
 
-        # Check (2): Each row in summed_results.csv is an integer in range [2, 200]
-        report_lines.append("\n--- Check 2: Values in summed_results.csv within range [2, 200] ---")
-        faasr_log("Running Check 2: Value range validation")
-        range_issues = []
-        for i, val in enumerate(summed_vals):
-            if val is None:
-                range_issues.append(f"Row {i}: non-integer value '{summed_raw[i]}'.")
-            elif not (2 <= val <= 200):
-                range_issues.append(f"Row {i}: value {val} is out of range [2, 200].")
-        if range_issues:
-            report_lines.append("FAIL: Range check issues found:")
-            report_lines.extend(f"  {issue}" for issue in range_issues)
-            all_passed = False
-        else:
-            report_lines.append("PASS: All values in 'summed_results.csv' are within range [2, 200].")
+            if len(a_rows) != len(b_rows):
+                discrepancies.append(f"Row count mismatch: '{input2}' has {len(a_rows)} rows, '{input3}' has {len(b_rows)} rows.")
+            if len(summed_rows) != len(a_rows):
+                discrepancies.append(f"Row count mismatch: '{input1}' has {len(summed_rows)} rows, but input files have {len(a_rows)} rows.")
 
-        # Check (3) and (4): Cross-validate row-by-row sums and row order
-        report_lines.append("\n--- Check 3 & 4: Row-level cross-validation and row order ---")
-        faasr_log("Running Check 3 & 4: Cross-validation of row-level sums")
-        cross_issues = []
-        num_rows = min(len(summed_vals), len(a_vals), len(b_vals))
-        for i in range(num_rows):
-            sv = summed_vals[i]
-            av = a_vals[i]
-            bv = b_vals[i]
-            if sv is None or av is None or bv is None:
-                cross_issues.append(f"Row {i}: Cannot validate due to non-integer value(s).")
-            elif sv != av + bv:
-                cross_issues.append(f"Row {i}: summed={sv}, a={av}, b={bv}, expected sum={av + bv}. MISMATCH.")
-
-        if len(summed_vals) != len(a_vals) or len(summed_vals) != len(b_vals):
-            cross_issues.append(f"Row count mismatch: summed={len(summed_vals)}, a={len(a_vals)}, b={len(b_vals)}.")
-
-        if cross_issues:
-            report_lines.append("FAIL: Cross-validation issues found:")
-            report_lines.extend(f"  {issue}" for issue in cross_issues)
-            all_passed = False
-        else:
-            report_lines.append("PASS: All row-level sums match. Row order is consistent with source files.")
-
-        # Summary
-        report_lines.append("\n--- Summary ---")
-        if all_passed:
-            report_lines.append("ALL CHECKS PASSED. 'summed_results.csv' is valid.")
-        else:
-            report_lines.append("ONE OR MORE CHECKS FAILED. See details above.")
-
-        faasr_log("Writing validation report to /tmp")
+        faasr_log("Writing validation report")
         with open(report_path, 'w') as f:
-            f.write("\n".join(report_lines) + "\n")
+            f.write("=== Validation Report for 'summed_output.csv' ===\n\n")
+            if results:
+                f.write("PASSED CHECKS:\n")
+                for r in results:
+                    f.write(f"  - {r}\n")
+                f.write("\n")
+            if discrepancies:
+                f.write("DISCREPANCIES FOUND:\n")
+                for d in discrepancies:
+                    f.write(f"  - {d}\n")
+            else:
+                f.write("No discrepancies found. All validations passed.\n")
 
         faasr_log(f"Uploading validation report '{output1}' to S3 folder '{folder}'")
-        faasr_put_file(local_file=local_report, remote_file=output1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Validation report '{output1}' successfully uploaded to S3.")
+        try:
+            faasr_put_file(local_file=output1, remote_file=output1, local_folder=local_tmp, remote_folder=folder)
+            faasr_log(f"Uploaded '{output1}' successfully.")
+        except Exception as e:
+            faasr_log(f"ERROR: Could not upload '{output1}': {e}")
+
+        faasr_log(f"Validation report written and uploaded to '{folder}/{output1}'.")
 
     except Exception as e:
         faasr_log(f"ERROR in task_3: {e}")
-        raise
