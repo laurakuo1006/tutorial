@@ -1,41 +1,63 @@
 import os
-import csv
 import random
+import csv
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
 def task_1(folder="tutorial", output1="file1.csv", output2="file2.csv"):
     try:
-        os.makedirs("/tmp", exist_ok=True)
+        faasr_log("Starting task_1: generating random CSV files")
 
-        file1_path = os.path.join("/tmp", output1)
-        file2_path = os.path.join("/tmp", output2)
+        local_tmp = "/tmp"
+        os.makedirs(local_tmp, exist_ok=True)
 
-        faasr_log("Generating random values for file1 and file2")
+        random.seed()
+
+        # Generate 10 random integers for file1
         values1 = [random.randint(1, 100) for _ in range(10)]
+        # Generate 10 random integers for file2
         values2 = [random.randint(1, 100) for _ in range(10)]
 
-        faasr_log(f"Writing {output1} to /tmp")
-        with open(file1_path, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['value1'])
-            for v in values1:
-                writer.writerow([v])
+        faasr_log(f"Generated values for {output1}: {values1}")
+        faasr_log(f"Generated values for {output2}: {values2}")
 
-        faasr_log(f"Writing {output2} to /tmp")
-        with open(file2_path, 'w', newline='') as f:
+        # Write file1.csv to /tmp
+        output1_local_path = os.path.join(local_tmp, output1)
+        with open(output1_local_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            writer.writerow(['value2'])
-            for v in values2:
-                writer.writerow([v])
+            for val in values1:
+                writer.writerow([val])
 
+        faasr_log(f"Written {output1} to local tmp: {output1_local_path}")
+
+        # Write file2.csv to /tmp
+        output2_local_path = os.path.join(local_tmp, output2)
+        with open(output2_local_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            for val in values2:
+                writer.writerow([val])
+
+        faasr_log(f"Written {output2} to local tmp: {output2_local_path}")
+
+        # Upload file1.csv to S3
         faasr_log(f"Uploading {output1} to S3 folder '{folder}'")
-        faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
+        faasr_put_file(
+            local_file=output1,
+            remote_file=output1,
+            local_folder=local_tmp,
+            remote_folder=folder
+        )
+        faasr_log(f"Successfully uploaded {output1} to S3 folder '{folder}'")
 
+        # Upload file2.csv to S3
         faasr_log(f"Uploading {output2} to S3 folder '{folder}'")
-        faasr_put_file(local_file=output2, remote_file=output2, local_folder="/tmp", remote_folder=folder)
+        faasr_put_file(
+            local_file=output2,
+            remote_file=output2,
+            local_folder=local_tmp,
+            remote_folder=folder
+        )
+        faasr_log(f"Successfully uploaded {output2} to S3 folder '{folder}'")
 
-        faasr_log(f"Created {output1} with values: {values1}")
-        faasr_log(f"Created {output2} with values: {values2}")
         faasr_log("task_1 completed successfully")
 
     except Exception as e:
