@@ -3,12 +3,10 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "random_integers_1.csv",
-        "output2": "random_integers_2.csv"
+        "output1": "integers_a.csv",
+        "output2": "integers_b.csv"
       },
-      "InvokeNext": [
-        "task-2"
-      ],
+      "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
       "FunctionName": "task_1"
@@ -16,9 +14,9 @@
     "task-2": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "random_integers_1.csv",
-        "input2": "random_integers_2.csv",
-        "output1": "output_sum.csv"
+        "input1": "integers_a.csv",
+        "input2": "integers_b.csv",
+        "output1": "summed_output.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
