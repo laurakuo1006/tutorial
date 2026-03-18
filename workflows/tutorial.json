@@ -1,17 +1,15 @@
 {
   "ActionList": {
-    "task-3": {
+    "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "summed_output.csv",
-        "input2": "integers_a.csv",
-        "input3": "integers_b.csv",
-        "output1": "element_wise_addition_validation_report.txt"
+        "output1": "integers_a.csv",
+        "output2": "integers_b.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
-      "FunctionName": "task_3"
+      "FunctionName": "task_1"
     }
   },
   "ComputeServers": {
@@ -25,18 +23,18 @@
   },
   "DataStores": {
     "S3": {
-      "Endpoint": "https://s3.amazonaws.com",
+      "Endpoint": "https://s3.us-east-2.amazonaws.com",
       "Bucket": "faasr-test-bucket",
       "Region": "us-east-2"
     }
   },
   "ActionContainers": {
-    "task-3": "ghcr.io/faasr/github-actions-python:latest"
+    "task-1": "ghcr.io/faasr/github-actions-python:latest"
   },
-  "FunctionInvoke": "task-3",
+  "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
-    "task_3": "laurakuo1006/tutorial/functions"
+    "task_1": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
