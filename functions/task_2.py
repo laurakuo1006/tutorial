@@ -3,66 +3,69 @@ import csv
 import random
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_2(folder="tutorial", input1="input1.csv", input2="input2.csv", output1="output_sums.csv"):
+def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="summed_results.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
-        input1_local = os.path.join("/tmp", input1)
-        input2_local = os.path.join("/tmp", input2)
-        output1_local = os.path.join("/tmp", output1)
+        local_a = os.path.join("/tmp", input1)
+        local_b = os.path.join("/tmp", input2)
+        local_out = os.path.join("/tmp", output1)
 
-        # Download input1.csv from S3
+        # Download integers_a.csv from S3
         faasr_log(f"Downloading {input1} from S3 folder {folder}")
         try:
             faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
             faasr_log(f"Successfully downloaded {input1}")
         except Exception as e:
-            faasr_log(f"Could not download {input1} from S3, generating random data: {e}")
-            with open(input1_local, 'w', newline='') as f:
+            faasr_log(f"Could not download {input1}, generating random data: {e}")
+            with open(local_a, 'w', newline='') as f:
                 writer = csv.writer(f)
                 for _ in range(10):
                     writer.writerow([random.randint(1, 100)])
 
-        # Download input2.csv from S3
+        # Download integers_b.csv from S3
         faasr_log(f"Downloading {input2} from S3 folder {folder}")
         try:
             faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
             faasr_log(f"Successfully downloaded {input2}")
         except Exception as e:
-            faasr_log(f"Could not download {input2} from S3, generating random data: {e}")
-            with open(input2_local, 'w', newline='') as f:
+            faasr_log(f"Could not download {input2}, generating random data: {e}")
+            with open(local_b, 'w', newline='') as f:
                 writer = csv.writer(f)
                 for _ in range(10):
                     writer.writerow([random.randint(1, 100)])
 
-        # Read input1.csv
-        faasr_log(f"Reading {input1_local}")
-        values1 = []
-        with open(input1_local, 'r', newline='') as f:
+        # Read integers from both files
+        faasr_log("Reading values from input files")
+        values_a = []
+        with open(local_a, 'r', newline='') as f:
             reader = csv.reader(f)
             for row in reader:
-                values1.append(int(row[0]))
+                if row:
+                    values_a.append(int(row[0]))
 
-        # Read input2.csv
-        faasr_log(f"Reading {input2_local}")
-        values2 = []
-        with open(input2_local, 'r', newline='') as f:
+        values_b = []
+        with open(local_b, 'r', newline='') as f:
             reader = csv.reader(f)
             for row in reader:
-                values2.append(int(row[0]))
+                if row:
+                    values_b.append(int(row[0]))
 
-        # Element-wise addition
-        faasr_log("Performing element-wise addition")
-        sums = [v1 + v2 for v1, v2 in zip(values1, values2)]
+        faasr_log(f"Read {len(values_a)} values from {input1} and {len(values_b)} values from {input2}")
 
-        # Write output_sums.csv to /tmp
-        faasr_log(f"Writing {len(sums)} sums to {output1_local}")
-        with open(output1_local, 'w', newline='') as f:
+        # Perform element-wise addition
+        sums = [a + b for a, b in zip(values_a, values_b)]
+        faasr_log(f"Computed {len(sums)} element-wise sums")
+
+        # Write results to output CSV
+        with open(local_out, 'w', newline='') as f:
             writer = csv.writer(f)
             for s in sums:
-                writer.writerow([int(s)])
+                writer.writerow([s])
 
-        # Upload output_sums.csv to S3
+        faasr_log(f"Written {len(sums)} rows to local file {local_out}")
+
+        # Upload output to S3
         faasr_log(f"Uploading {output1} to S3 folder {folder}")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
         faasr_log(f"Successfully uploaded {output1} to S3 folder {folder}")
