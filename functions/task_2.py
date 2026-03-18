@@ -1,65 +1,48 @@
-from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 import os
 import csv
+from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
 def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="summed_output.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
-        local_a = os.path.join("/tmp", input1)
-        local_b = os.path.join("/tmp", input2)
-        local_out = os.path.join("/tmp", output1)
-
-        faasr_log(f"Downloading {input1} from S3 folder {folder}")
+        faasr_log(f"Downloading input files {input1} and {input2} from S3 folder {folder}")
         faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
-
-        faasr_log(f"Downloading {input2} from S3 folder {folder}")
         faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
 
-        faasr_log(f"Reading {input1}")
-        with open(local_a, "r", newline="") as f:
-            reader = csv.reader(f)
-            rows_a = [row for row in reader]
+        input1_path = os.path.join("/tmp", input1)
+        input2_path = os.path.join("/tmp", input2)
+        output1_path = os.path.join("/tmp", output1)
 
-        faasr_log(f"Reading {input2}")
-        with open(local_b, "r", newline="") as f:
-            reader = csv.reader(f)
-            rows_b = [row for row in reader]
+        faasr_log(f"Reading input files from /tmp")
+        with open(input1_path, "r", newline="") as f1, open(input2_path, "r", newline="") as f2:
+            reader1 = csv.DictReader(f1)
+            reader2 = csv.DictReader(f2)
 
-        if len(rows_a) != len(rows_b):
-            faasr_log(f"Error: Mismatched row counts: {len(rows_a)} vs {len(rows_b)}")
-            raise ValueError(f"Mismatched row counts: {len(rows_a)} vs {len(rows_b)}")
+            rows1 = list(reader1)
+            rows2 = list(reader2)
 
-        if len(rows_a) != 15:
-            faasr_log(f"Error: Expected exactly 15 rows, but got {len(rows_a)}")
-            raise ValueError(f"Expected exactly 15 rows, but got {len(rows_a)}")
+        min_len = min(len(rows1), len(rows2))
+        faasr_log(f"Processing {min_len} rows from each input file")
 
-        faasr_log("Computing row-wise sums")
         sums = []
-        for i, (row_a, row_b) in enumerate(zip(rows_a, rows_b)):
-            try:
-                val_a = int(row_a[0].strip())
-            except (ValueError, IndexError):
-                faasr_log(f"Error: Non-integer value in {input1} at row {i}: {row_a}")
-                raise ValueError(f"Non-integer value in {input1} at row {i}: {row_a}")
-            try:
-                val_b = int(row_b[0].strip())
-            except (ValueError, IndexError):
-                faasr_log(f"Error: Non-integer value in {input2} at row {i}: {row_b}")
-                raise ValueError(f"Non-integer value in {input2} at row {i}: {row_b}")
+        for i in range(min_len):
+            val_a = int(rows1[i]["value"])
+            val_b = int(rows2[i]["value"])
             sums.append(val_a + val_b)
 
-        faasr_log(f"Writing {len(sums)} summed rows to {local_out}")
-        with open(local_out, "w", newline="") as f:
-            writer = csv.writer(f)
+        faasr_log(f"Writing {len(sums)} summed rows to {output1_path}")
+        with open(output1_path, "w", newline="") as fout:
+            writer = csv.writer(fout)
+            writer.writerow(["sum"])
             for s in sums:
                 writer.writerow([s])
 
-        faasr_log(f"Uploading {output1} to S3 folder {folder}")
+        faasr_log(f"Uploading output file {output1} to S3 folder {folder}")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
 
-        faasr_log(f"task_2 completed successfully: written {len(sums)} rows to {output1}")
+        faasr_log(f"Successfully written {len(sums)} rows to {output1} in S3 folder {folder}")
 
     except Exception as e:
-        faasr_log(f"task_2 encountered an error: {str(e)}")
+        faasr_log(f"Error in task_2: {str(e)}")
         raise
