@@ -23,9 +23,9 @@
   },
   "DataStores": {
     "S3": {
-      "Endpoint": "https://play.min.io",
-      "Bucket": "faasr",
-      "Region": "us-east-1"
+      "Endpoint": "https://s3.amazonaws.com",
+      "Bucket": "faasr-test-bucket",
+      "Region": "us-east-2"
     }
   },
   "ActionContainers": {
