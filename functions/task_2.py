@@ -1,76 +1,65 @@
+from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 import os
 import csv
-import random
-from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_2(folder="tutorial", input1="file1.csv", input2="file2.csv", output1="output.csv"):
+def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="summed_output.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
-        file1_local = os.path.join("/tmp", input1)
-        file2_local = os.path.join("/tmp", input2)
-        output_local = os.path.join("/tmp", output1)
+        local_a = os.path.join("/tmp", input1)
+        local_b = os.path.join("/tmp", input2)
+        local_out = os.path.join("/tmp", output1)
 
-        # Download file1.csv from S3
         faasr_log(f"Downloading {input1} from S3 folder {folder}")
-        try:
-            faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
-            faasr_log(f"Successfully downloaded {input1}")
-        except Exception as e:
-            faasr_log(f"Could not download {input1}: {e}. Generating random data instead.")
-            with open(file1_local, 'w', newline='') as f:
-                writer = csv.writer(f)
-                for _ in range(10):
-                    writer.writerow([random.randint(1, 100)])
+        faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
 
-        # Download file2.csv from S3
         faasr_log(f"Downloading {input2} from S3 folder {folder}")
-        try:
-            faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
-            faasr_log(f"Successfully downloaded {input2}")
-        except Exception as e:
-            faasr_log(f"Could not download {input2}: {e}. Generating random data instead.")
-            with open(file2_local, 'w', newline='') as f:
-                writer = csv.writer(f)
-                for _ in range(10):
-                    writer.writerow([random.randint(1, 100)])
+        faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
 
-        # Read file1.csv
         faasr_log(f"Reading {input1}")
-        with open(file1_local, 'r', newline='') as f:
+        with open(local_a, "r", newline="") as f:
             reader = csv.reader(f)
-            values1 = [int(row[0]) for row in reader]
+            rows_a = [row for row in reader]
 
-        # Read file2.csv
         faasr_log(f"Reading {input2}")
-        with open(file2_local, 'r', newline='') as f:
+        with open(local_b, "r", newline="") as f:
             reader = csv.reader(f)
-            values2 = [int(row[0]) for row in reader]
+            rows_b = [row for row in reader]
 
-        # Check row counts match
-        if len(values1) != len(values2):
-            raise ValueError(f"Row count mismatch: {input1} has {len(values1)} rows, {input2} has {len(values2)} rows.")
+        if len(rows_a) != len(rows_b):
+            faasr_log(f"Error: Mismatched row counts: {len(rows_a)} vs {len(rows_b)}")
+            raise ValueError(f"Mismatched row counts: {len(rows_a)} vs {len(rows_b)}")
 
-        faasr_log(f"Read {len(values1)} rows from {input1} and {len(values2)} rows from {input2}")
+        if len(rows_a) != 15:
+            faasr_log(f"Error: Expected exactly 15 rows, but got {len(rows_a)}")
+            raise ValueError(f"Expected exactly 15 rows, but got {len(rows_a)}")
 
-        # Element-wise addition
-        sums = [v1 + v2 for v1, v2 in zip(values1, values2)]
-        faasr_log(f"Computed element-wise sums for {len(sums)} rows")
+        faasr_log("Computing row-wise sums")
+        sums = []
+        for i, (row_a, row_b) in enumerate(zip(rows_a, rows_b)):
+            try:
+                val_a = int(row_a[0].strip())
+            except (ValueError, IndexError):
+                faasr_log(f"Error: Non-integer value in {input1} at row {i}: {row_a}")
+                raise ValueError(f"Non-integer value in {input1} at row {i}: {row_a}")
+            try:
+                val_b = int(row_b[0].strip())
+            except (ValueError, IndexError):
+                faasr_log(f"Error: Non-integer value in {input2} at row {i}: {row_b}")
+                raise ValueError(f"Non-integer value in {input2} at row {i}: {row_b}")
+            sums.append(val_a + val_b)
 
-        # Write output.csv to /tmp
-        faasr_log(f"Writing {output1} to /tmp")
-        with open(output_local, 'w', newline='') as f:
+        faasr_log(f"Writing {len(sums)} summed rows to {local_out}")
+        with open(local_out, "w", newline="") as f:
             writer = csv.writer(f)
             for s in sums:
-                writer.writerow([int(s)])
+                writer.writerow([s])
 
-        faasr_log(f"Written {len(sums)} summed values to {output_local}")
-
-        # Upload output.csv to S3
         faasr_log(f"Uploading {output1} to S3 folder {folder}")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Successfully uploaded {output1} to S3 folder {folder}")
+
+        faasr_log(f"task_2 completed successfully: written {len(sums)} rows to {output1}")
 
     except Exception as e:
-        faasr_log(f"Error in task_2: {e}")
+        faasr_log(f"task_2 encountered an error: {str(e)}")
         raise
