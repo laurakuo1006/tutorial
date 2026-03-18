@@ -1,45 +1,44 @@
-import os
-import json
-import random
-import csv
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
+import os
+import pandas as pd
 
-def task_2(folder="tutorial", input1="config.json", output1="integers_a.csv"):
+def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="sum_output.csv"):
     try:
-        faasr_log("Starting task_2: downloading config file from S3")
         os.makedirs("/tmp", exist_ok=True)
 
+        faasr_log(f"Downloading {input1} from S3 folder {folder}")
         faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Downloaded {input1} from S3 folder {folder}")
 
-        config_path = os.path.join("/tmp", input1)
-        with open(config_path, 'r') as f:
-            config = json.load(f)
+        faasr_log(f"Downloading {input2} from S3 folder {folder}")
+        faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
 
-        num_rows = config.get('num_rows', 15)
-        min_val = config.get('min_val', 1)
-        max_val = config.get('max_val', 100)
-        seed = config.get('seed', None)
+        path_a = os.path.join("/tmp", input1)
+        path_b = os.path.join("/tmp", input2)
+        path_out = os.path.join("/tmp", output1)
 
-        faasr_log(f"Config loaded: num_rows={num_rows}, min_val={min_val}, max_val={max_val}, seed={seed}")
+        faasr_log(f"Reading {input1}")
+        df_a = pd.read_csv(path_a)
 
-        if seed is not None:
-            random.seed(seed)
+        faasr_log(f"Reading {input2}")
+        df_b = pd.read_csv(path_b)
 
-        integers = [random.randint(min_val, max_val) for _ in range(num_rows)]
+        assert len(df_a) == 10, f"integers_a.csv does not contain exactly 10 rows (found {len(df_a)})"
+        assert len(df_b) == 10, f"integers_b.csv does not contain exactly 10 rows (found {len(df_b)})"
 
-        output_path = os.path.join("/tmp", output1)
-        with open(output_path, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['value'])
-            for val in integers:
-                writer.writerow([val])
+        faasr_log("Computing element-wise sums")
+        sums = df_a['value_a'].values + df_b['value_b'].values
 
-        faasr_log(f"Written {num_rows} integers to local file {output_path}")
+        df_out = pd.DataFrame({'sum': sums.astype(int)})
+        df_out.to_csv(path_out, index=False)
 
+        faasr_log(f"Written {len(df_out)} rows to {path_out}, uploading to S3 folder {folder}")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Uploaded {output1} to S3 folder {folder}")
 
+        faasr_log(f"Successfully uploaded {output1} to S3 folder {folder}")
+
+    except AssertionError as ae:
+        faasr_log(f"Assertion error in task_2: {str(ae)}")
+        raise
     except Exception as e:
         faasr_log(f"Error in task_2: {str(e)}")
         raise
