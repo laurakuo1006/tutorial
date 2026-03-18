@@ -1,55 +1,45 @@
-from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 import os
-import csv
+import pandas as pd
+from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="sums_output.csv"):
+def task_2(folder="tutorial", input1="input1.csv", input2="input2.csv", output1="output_sums.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
-        faasr_log(f"Downloading input files '{input1}' and '{input2}' from S3 folder '{folder}'")
+        local_input1 = os.path.join("/tmp", input1)
+        local_input2 = os.path.join("/tmp", input2)
+        local_output1 = os.path.join("/tmp", output1)
+
+        faasr_log(f"Downloading {input1} from S3 folder '{folder}'")
         faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
+
+        faasr_log(f"Downloading {input2} from S3 folder '{folder}'")
         faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
 
-        input1_path = os.path.join("/tmp", input1)
-        input2_path = os.path.join("/tmp", input2)
-        output1_path = os.path.join("/tmp", output1)
+        faasr_log("Reading input CSV files into DataFrames")
+        df1 = pd.read_csv(local_input1)
+        df2 = pd.read_csv(local_input2)
 
-        faasr_log(f"Reading '{input1_path}'")
-        with open(input1_path, "r", newline="") as f:
-            reader = csv.reader(f)
-            values_a = [row for row in reader]
+        faasr_log(f"df1 shape: {df1.shape}, df2 shape: {df2.shape}")
 
-        faasr_log(f"Reading '{input2_path}'")
-        with open(input2_path, "r", newline="") as f:
-            reader = csv.reader(f)
-            values_b = [row for row in reader]
+        assert len(df1) == len(df2), f"Row count mismatch: {len(df1)} vs {len(df2)}"
+        assert len(df1) == 10, f"Expected 10 rows, got {len(df1)}"
 
-        if len(values_a) != len(values_b):
-            error_msg = (
-                f"Row count mismatch: '{input1}' has {len(values_a)} rows, "
-                f"'{input2}' has {len(values_b)} rows. Both must have the same number of rows."
-            )
-            faasr_log(error_msg)
-            raise ValueError(error_msg)
+        faasr_log("Computing element-wise sums of 'value' columns")
+        sums = df1['value'] + df2['value']
+        result_df = pd.DataFrame({'sum': sums.astype(int)})
 
-        faasr_log(f"Computing sums for {len(values_a)} rows")
-        sums = []
-        for i, (row_a, row_b) in enumerate(zip(values_a, values_b)):
-            val_a = int(row_a[0].strip())
-            val_b = int(row_b[0].strip())
-            sums.append(val_a + val_b)
+        faasr_log(f"Writing {len(result_df)} rows to local file {local_output1}")
+        result_df.to_csv(local_output1, index=False)
 
-        faasr_log(f"Writing {len(sums)} sums to '{output1_path}'")
-        with open(output1_path, "w", newline="") as f:
-            writer = csv.writer(f)
-            for s in sums:
-                writer.writerow([s])
-
-        faasr_log(f"Uploading '{output1}' to S3 folder '{folder}'")
+        faasr_log(f"Uploading {output1} to S3 folder '{folder}'")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
 
-        faasr_log(f"Successfully written {len(sums)} sums to '{output1}' in S3 folder '{folder}'.")
+        faasr_log(f"task_2 completed successfully. Written {len(result_df)} rows to {output1}")
 
+    except AssertionError as ae:
+        faasr_log(f"Assertion error in task_2: {ae}")
+        raise
     except Exception as e:
-        faasr_log(f"Error in task_2: {str(e)}")
+        faasr_log(f"Error in task_2: {e}")
         raise
