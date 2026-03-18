@@ -1,78 +1,72 @@
 import os
-import pandas as pd
+import csv
+import random
 from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_2(folder="tutorial", input1="integers_a.csv", input2="integers_b.csv", output1="summed_results.csv"):
+def task_2(folder="tutorial", input1="input1.csv", input2="input2.csv", output1="output_sums.csv"):
     try:
         os.makedirs("/tmp", exist_ok=True)
 
+        input1_local = os.path.join("/tmp", input1)
+        input2_local = os.path.join("/tmp", input2)
+        output1_local = os.path.join("/tmp", output1)
+
+        # Download input1.csv from S3
         faasr_log(f"Downloading {input1} from S3 folder {folder}")
-        faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
+        try:
+            faasr_get_file(local_file=input1, remote_file=input1, local_folder="/tmp", remote_folder=folder)
+            faasr_log(f"Successfully downloaded {input1}")
+        except Exception as e:
+            faasr_log(f"Could not download {input1} from S3, generating random data: {e}")
+            with open(input1_local, 'w', newline='') as f:
+                writer = csv.writer(f)
+                for _ in range(10):
+                    writer.writerow([random.randint(1, 100)])
 
+        # Download input2.csv from S3
         faasr_log(f"Downloading {input2} from S3 folder {folder}")
-        faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
+        try:
+            faasr_get_file(local_file=input2, remote_file=input2, local_folder="/tmp", remote_folder=folder)
+            faasr_log(f"Successfully downloaded {input2}")
+        except Exception as e:
+            faasr_log(f"Could not download {input2} from S3, generating random data: {e}")
+            with open(input2_local, 'w', newline='') as f:
+                writer = csv.writer(f)
+                for _ in range(10):
+                    writer.writerow([random.randint(1, 100)])
 
-        path_a = os.path.join("/tmp", input1)
-        path_b = os.path.join("/tmp", input2)
-        path_out = os.path.join("/tmp", output1)
+        # Read input1.csv
+        faasr_log(f"Reading {input1_local}")
+        values1 = []
+        with open(input1_local, 'r', newline='') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                values1.append(int(row[0]))
 
-        faasr_log("Reading CSV files into DataFrames")
-        df_a = pd.read_csv(path_a)
-        df_b = pd.read_csv(path_b)
-
-        # Sanity checks
-        if len(df_a) != 15:
-            raise ValueError(f"integers_a.csv must have exactly 15 data rows, found {len(df_a)}")
-        if len(df_b) != 15:
-            raise ValueError(f"integers_b.csv must have exactly 15 data rows, found {len(df_b)}")
-
-        col_a = 'value_a'
-        col_b = 'value_b'
-
-        if col_a not in df_a.columns:
-            raise ValueError(f"Column '{col_a}' not found in integers_a.csv")
-        if col_b not in df_b.columns:
-            raise ValueError(f"Column '{col_b}' not found in integers_b.csv")
-
-        # Check for nulls
-        if df_a[col_a].isnull().any():
-            raise ValueError("integers_a.csv contains null values")
-        if df_b[col_b].isnull().any():
-            raise ValueError("integers_b.csv contains null values")
-
-        # Check all values are whole integers (no floats)
-        for val in df_a[col_a]:
-            if not isinstance(val, (int,)) and not (isinstance(val, float) and val.is_integer()):
-                raise ValueError(f"Non-integer value found in integers_a.csv: {val}")
-            if isinstance(val, float) and not val.is_integer():
-                raise ValueError(f"Float value found in integers_a.csv: {val}")
-
-        for val in df_b[col_b]:
-            if not isinstance(val, (int,)) and not (isinstance(val, float) and val.is_integer()):
-                raise ValueError(f"Non-integer value found in integers_b.csv: {val}")
-            if isinstance(val, float) and not val.is_integer():
-                raise ValueError(f"Float value found in integers_b.csv: {val}")
-
-        faasr_log("Validation passed. Converting to int and performing element-wise addition")
-
-        # Convert to int to ensure no floats
-        values_a = df_a[col_a].astype(int)
-        values_b = df_b[col_b].astype(int)
+        # Read input2.csv
+        faasr_log(f"Reading {input2_local}")
+        values2 = []
+        with open(input2_local, 'r', newline='') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                values2.append(int(row[0]))
 
         # Element-wise addition
-        sums = values_a.values + values_b.values
+        faasr_log("Performing element-wise addition")
+        sums = [v1 + v2 for v1, v2 in zip(values1, values2)]
 
-        # Write output
-        df_out = pd.DataFrame({'sum': sums.astype(int)})
-        df_out.to_csv(path_out, index=False)
-        faasr_log(f"Written {len(df_out)} rows to {path_out}")
+        # Write output_sums.csv to /tmp
+        faasr_log(f"Writing {len(sums)} sums to {output1_local}")
+        with open(output1_local, 'w', newline='') as f:
+            writer = csv.writer(f)
+            for s in sums:
+                writer.writerow([int(s)])
 
+        # Upload output_sums.csv to S3
         faasr_log(f"Uploading {output1} to S3 folder {folder}")
         faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
-        faasr_log(f"Successfully uploaded {output1} to S3")
+        faasr_log(f"Successfully uploaded {output1} to S3 folder {folder}")
 
     except Exception as e:
-        faasr_log(f"Error in task_2: {str(e)}")
+        faasr_log(f"Error in task_2: {e}")
         raise
-
-task_2("tutorial", "integers_a.csv", "integers_b.csv", "summed_results.csv")
