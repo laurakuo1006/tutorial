@@ -3,7 +3,8 @@
     "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "output1": "config.json"
+        "output1": "integers_a.csv",
+        "output2": "integers_b.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
