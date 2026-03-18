@@ -1,39 +1,39 @@
 import os
-import json
-from FaaSr_py.client.py_client_stubs import faasr_put_file, faasr_log
+import random
+from FaaSr_py.client.py_client_stubs import faasr_get_file, faasr_put_file, faasr_log
 
-def task_1(folder="tutorial", output1="config.json"):
+def task_1(folder="tutorial", output1="integers_a.csv", output2="integers_b.csv"):
     try:
-        faasr_log("Starting task_1: generating configuration file")
-
         os.makedirs("/tmp", exist_ok=True)
 
-        config = {
-            "row_count": 15,
-            "value_range": {
-                "min": 1,
-                "max": 100
-            },
-            "header": False
-        }
+        path_a = os.path.join("/tmp", output1)
+        path_b = os.path.join("/tmp", output2)
 
-        local_output_path = os.path.join("/tmp", output1)
-        with open(local_output_path, "w") as f:
-            json.dump(config, f, indent=4)
+        faasr_log("Generating random integers for two output files.")
 
-        faasr_log(f"Configuration written locally to {local_output_path}")
+        integers_a = [random.randint(1, 100) for _ in range(15)]
+        integers_b = [random.randint(1, 100) for _ in range(15)]
 
-        faasr_put_file(
-            local_file=output1,
-            remote_file=output1,
-            local_folder="/tmp",
-            remote_folder=folder
-        )
+        with open(path_a, 'w') as f:
+            for val in integers_a:
+                f.write(f"{val}\n")
 
-        faasr_log(f"Configuration file '{output1}' uploaded to S3 folder '{folder}' successfully")
+        faasr_log(f"Written {len(integers_a)} integers to local file {path_a}.")
+
+        with open(path_b, 'w') as f:
+            for val in integers_b:
+                f.write(f"{val}\n")
+
+        faasr_log(f"Written {len(integers_b)} integers to local file {path_b}.")
+
+        faasr_put_file(local_file=output1, remote_file=output1, local_folder="/tmp", remote_folder=folder)
+        faasr_log(f"Uploaded {output1} to S3 folder {folder}.")
+
+        faasr_put_file(local_file=output2, remote_file=output2, local_folder="/tmp", remote_folder=folder)
+        faasr_log(f"Uploaded {output2} to S3 folder {folder}.")
+
+        faasr_log("task_1 completed successfully.")
 
     except Exception as e:
         faasr_log(f"Error in task_1: {str(e)}")
         raise
-
-task_1("tutorial", "config.json")
