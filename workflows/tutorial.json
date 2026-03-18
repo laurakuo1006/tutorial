@@ -1,16 +1,15 @@
 {
   "ActionList": {
-    "task-2": {
+    "task-1": {
       "Arguments": {
         "folder": "tutorial",
-        "input1": "integers_a.csv",
-        "input2": "integers_b.csv",
-        "output1": "summed_integers.csv"
+        "output1": "file1.csv",
+        "output2": "file2.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
       "Type": "Python",
-      "FunctionName": "task_2"
+      "FunctionName": "task_1"
     }
   },
   "ComputeServers": {
@@ -30,12 +29,12 @@
     }
   },
   "ActionContainers": {
-    "task-2": "ghcr.io/faasr/github-actions-python:latest"
+    "task-1": "ghcr.io/faasr/github-actions-python:latest"
   },
-  "FunctionInvoke": "task-2",
+  "FunctionInvoke": "task-1",
   "DefaultDataStore": "S3",
   "FunctionGitRepo": {
-    "task_2": "laurakuo1006/tutorial/functions"
+    "task_1": "laurakuo1006/tutorial/functions"
   },
   "LoggingDataStore": "S3",
   "FaaSrLog": "FaaSrLog",
