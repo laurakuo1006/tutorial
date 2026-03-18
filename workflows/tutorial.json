@@ -18,7 +18,7 @@
         "folder": "tutorial",
         "input1": "integers_a.csv",
         "input2": "integers_b.csv",
-        "output1": "summed_output.csv"
+        "output1": "summed_results.csv"
       },
       "InvokeNext": [],
       "FaaSServer": "GH",
